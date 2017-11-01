@@ -23,12 +23,14 @@ import sys
 curdir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(curdir))
 
+
 if sys.version_info[0] < 3:
     reload(sys)
     sys.setdefaultencoding("utf-8")
 
 from utils import *
 
+PROCESSED_DATA_PATH = './data/processed_data.pkl'
 
 # the max length for this project
 MAX_LENGTH = 10
@@ -44,7 +46,7 @@ eng_prefixes = (
 )
 
 
-def readLangs(lang1, lang2, reverse=False):
+def read_langs(lang1, lang2, reverse=False):
     '''
     To read the data file we will split the file into lines,
     and then split lines into pairs.
@@ -94,7 +96,7 @@ def filter_pairs(pairs):
     return [pair for pair in pairs if filter_pair(pair)]
 
 
-def prepareData(lang1, lang2, reverse=False):
+def prepare_data(lang1, lang2, reverse=False):
     '''
     get the final pairs and the two stat class
     :param lang1: this is the stat class for input data
@@ -102,7 +104,7 @@ def prepareData(lang1, lang2, reverse=False):
     :param reverse: Boolean
     :return: the two stated Lang class and the filtered pairs
     '''
-    input_lang, output_lang, pairs = readLangs(lang1, lang2, reverse)
+    input_lang, output_lang, pairs = read_langs(lang1, lang2, reverse)
     print("Read %s sentence pairs" % len(pairs))
     pairs = filter_pairs(pairs)
     print("Trimmed to %s sentence pairs" % len(pairs))
@@ -114,3 +116,10 @@ def prepareData(lang1, lang2, reverse=False):
     print(input_lang.name, input_lang.n_words)
     print(output_lang.name, output_lang.n_words)
     return input_lang, output_lang, pairs
+
+def save_processed_data(save_path):
+    input_lang, output_lang, pairs = prepare_data('eng', 'fra', True)
+    save_obj_to_pickle((input_lang, output_lang, pairs), save_path)
+
+if __name__ == '__main__':
+    save_processed_data(PROCESSED_DATA_PATH)

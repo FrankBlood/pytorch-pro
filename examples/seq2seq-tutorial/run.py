@@ -27,13 +27,13 @@ if sys.version_info[0] < 3:
     reload(sys)
     sys.setdefaultencoding("utf-8")
 
-from utils import *
 from config import *
 from Encoder.EncoderTutorial import EncoderRNN
 from Decoder.AttnDecoderTutorial import AttnDecoderRNN
 
 def main():
-    input_lang, output_lang, pairs = prepareData('eng', 'fra', True)
+    # input_lang, output_lang, pairs = prepare_data('eng', 'fra', True)
+    input_lang, output_lang, pairs = load_obj_from_pickle(PROCESSED_DATA_PATH)
     print(random.choice(pairs))
 
     hidden_size = 256
@@ -47,26 +47,35 @@ def main():
         encoder = encoder.cuda()
         attn_decoder = attn_decoder.cuda()
 
-    train_iters(encoder, attn_decoder, n_iters=75000, pairs=pairs, input_lang=input_lang, output_lang=output_lang, print_every=5000)
+    # train_iters(encoder, attn_decoder, n_iters=750, pairs=pairs,
+    #             input_lang=input_lang, output_lang=output_lang,
+    #             max_length=MAX_LENGTH, print_every=50)
+    train_iters(encoder, attn_decoder, n_iters=75000, pairs=pairs,
+                input_lang=input_lang, output_lang=output_lang,
+                max_length=MAX_LENGTH, print_every=5000)
 
     torch.save(encoder.state_dict(), './models/encoder.params.pkl')
     torch.save(attn_decoder.state_dict(), './models/attn_decoder.params.pkl')
     print('model saved successfully!')
 
-    evaluate_randomly(encoder, attn_decoder, pairs)
+    evaluate_randomly(encoder, attn_decoder, input_lang, output_lang, pairs, MAX_LENGTH)
 
     output_words, attentions = evaluate(encoder, attn_decoder,
                                         input_lang, output_lang, "je suis trop froid .",
                                         max_length=MAX_LENGTH)
     plt.matshow(attentions.numpy())
 
-    evaluate_and_show_attention(encoder, attn_decoder, "elle a cinq ans de moins que moi .")
+    evaluate_and_show_attention(encoder, attn_decoder, input_lang, output_lang,
+                                "elle a cinq ans de moins que moi .", MAX_LENGTH)
 
-    evaluate_and_show_attention(encoder, attn_decoder, "elle est trop petit .")
+    evaluate_and_show_attention(encoder, attn_decoder, input_lang, output_lang,
+                                "elle est trop petit .", MAX_LENGTH)
 
-    evaluate_and_show_attention(encoder, attn_decoder, "je ne crains pas de mourir .")
+    evaluate_and_show_attention(encoder, attn_decoder, input_lang, output_lang,
+                                "je ne crains pas de mourir .", MAX_LENGTH)
 
-    evaluate_and_show_attention(encoder, attn_decoder, "c est un jeune directeur plein de talent .")
+    evaluate_and_show_attention(encoder, attn_decoder, input_lang, output_lang,
+                                "c est un jeune directeur plein de talent .", MAX_LENGTH)
 
 
 if __name__ == "__main__":

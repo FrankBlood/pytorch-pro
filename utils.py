@@ -114,7 +114,7 @@ def indexes_from_sentence(lang, sentence):
     :param sentence: the sentence which will turn to idx sequence
     :return: the idx sequence
     '''
-    return [lang.word2index[word] for word in sentence.split(' ')]
+    return [lang.word_to_idx[word] for word in sentence.split(' ')]
 
 
 def variable_from_sentence(lang, sentence):
@@ -229,7 +229,8 @@ def train_seq2seq(input_variable, target_variable, encoder, decoder,
     return loss.data[0] / target_length
 
 
-def train_iters(encoder, decoder, n_iters, pairs, input_lang, output_lang, print_every=1000, plot_every=100, learning_rate=0.01):
+def train_iters(encoder, decoder, n_iters, pairs, input_lang, output_lang, max_length,
+                print_every=1000, plot_every=100, learning_rate=0.01):
     start = time.time()
     plot_losses = []
     print_loss_total = 0  # Reset every print_every
@@ -247,7 +248,7 @@ def train_iters(encoder, decoder, n_iters, pairs, input_lang, output_lang, print
         target_variable = training_pair[1]
 
         loss = train_seq2seq(input_variable, target_variable, encoder,
-                             decoder, encoder_optimizer, decoder_optimizer, criterion)
+                             decoder, encoder_optimizer, decoder_optimizer, criterion, max_length=max_length)
         print_loss_total += loss
         plot_loss_total += loss
 
@@ -268,7 +269,7 @@ def train_iters(encoder, decoder, n_iters, pairs, input_lang, output_lang, print
 def evaluate(encoder, decoder, input_lang, output_lang, sentence, max_length):
     input_variable = variable_from_sentence(input_lang, sentence)
     input_length = input_variable.size()[0]
-    encoder_hidden = encoder.initHidden()
+    encoder_hidden = encoder.init_hidden()
 
     encoder_outputs = Variable(torch.zeros(max_length, encoder.hidden_size))
     encoder_outputs = encoder_outputs.cuda() if use_cuda else encoder_outputs
@@ -296,7 +297,7 @@ def evaluate(encoder, decoder, input_lang, output_lang, sentence, max_length):
             decoded_words.append('<EOS>')
             break
         else:
-            decoded_words.append(output_lang.index2word[ni])
+            decoded_words.append(output_lang.idx_to_word[ni])
 
         decoder_input = Variable(torch.LongTensor([[ni]]))
         decoder_input = decoder_input.cuda() if use_cuda else decoder_input
@@ -304,12 +305,12 @@ def evaluate(encoder, decoder, input_lang, output_lang, sentence, max_length):
     return decoded_words, decoder_attentions[:di + 1]
 
 
-def evaluate_randomly(encoder, decoder, pairs, n=10):
+def evaluate_randomly(encoder, decoder, input_lang, output_lang, pairs, max_length, n=10):
     for i in range(n):
         pair = random.choice(pairs)
         print('>', pair[0])
         print('=', pair[1])
-        output_words, attentions = evaluate(encoder, decoder, pair[0])
+        output_words, attentions = evaluate(encoder, decoder, input_lang, output_lang, pair[0], max_length)
         output_sentence = ' '.join(output_words)
         print('<', output_sentence)
         print('')
@@ -322,8 +323,9 @@ def show_plot(points):
     loc = ticker.MultipleLocator(base=0.2)
     ax.yaxis.set_major_locator(loc)
     plt.plot(points)
-    plt.savefig('./imgs/' + '_'.join(time.asctime(time.localtime(time.time())).split(' ')) + '.jpg',
-                dpi=1000)
+    now_time = '_'.join(time.asctime(time.localtime(time.time())).split(' '))
+    name = ''.join(random.sample(string.ascii_letters + string.digits, 8))
+    plt.savefig('./imgs/' + now_time + str(name) +'.pdf', format='pdf')
 
 
 def show_attention(input_sentence, output_words, attentions):
@@ -343,12 +345,13 @@ def show_attention(input_sentence, output_words, attentions):
     ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
 
     # plt.show()
-    plt.savefig('./imgs/' + '_'.join(time.asctime(time.localtime(time.time())).split(' ')) + '.pdf',
-                format='pdf')
+    now_time = '_'.join(time.asctime(time.localtime(time.time())).split(' '))
+    name = ''.join(random.sample(string.ascii_letters + string.digits, 8))
+    plt.savefig('./imgs/' + now_time + str(name) + '.pdf', format='pdf')
 
 
-def evaluate_and_show_attention(encoder, decoder, input_sentence):
-    output_words, attentions = evaluate(encoder, decoder, input_sentence)
+def evaluate_and_show_attention(encoder, decoder, input_lang, output_lang, input_sentence, max_length):
+    output_words, attentions = evaluate(encoder, decoder, input_lang, output_lang, input_sentence, max_length)
     print('input =', input_sentence)
     print('output =', ' '.join(output_words))
     show_attention(input_sentence, output_words, attentions)

@@ -47,7 +47,7 @@ def main():
         encoder = encoder.cuda()
         attn_decoder = attn_decoder.cuda()
 
-    train_iters(encoder, attn_decoder, n_iters=75000, pairs=pairs, print_every=5000)
+    train_iters(encoder, attn_decoder, n_iters=75000, pairs=pairs, input_lang=input_lang, output_lang=output_lang, print_every=5000)
 
     torch.save(encoder.state_dict(), './models/encoder.params.pkl')
     torch.save(attn_decoder.state_dict(), './models/attn_decoder.params.pkl')

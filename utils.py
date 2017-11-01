@@ -229,7 +229,7 @@ def train_seq2seq(input_variable, target_variable, encoder, decoder,
     return loss.data[0] / target_length
 
 
-def train_iters(encoder, decoder, n_iters, pairs, print_every=1000, plot_every=100, learning_rate=0.01):
+def train_iters(encoder, decoder, n_iters, pairs, input_lang, output_lang, print_every=1000, plot_every=100, learning_rate=0.01):
     start = time.time()
     plot_losses = []
     print_loss_total = 0  # Reset every print_every
@@ -237,7 +237,7 @@ def train_iters(encoder, decoder, n_iters, pairs, print_every=1000, plot_every=1
 
     encoder_optimizer = optim.SGD(encoder.parameters(), lr=learning_rate)
     decoder_optimizer = optim.SGD(decoder.parameters(), lr=learning_rate)
-    training_pairs = [variables_from_pair(random.choice(pairs))
+    training_pairs = [variables_from_pair(input_lang, output_lang, random.choice(pairs))
                       for i in range(n_iters)]
     criterion = nn.NLLLoss()
 

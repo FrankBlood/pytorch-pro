@@ -34,8 +34,9 @@ import torch.autograd as autograd
 from torch.autograd import Variable
 import torch.optim as optim
 
+
 class EncoderRNN(nn.Module):
-    def __init__(self, input_size, embedding_size, hidden_size, batch_size, n_layers=1, bidirectional=False):
+    def __init__(self, input_size, embedding_size, hidden_size, batch_size=1, n_layers=1, bidirectional=False):
         super(EncoderRNN, self).__init__()
         self.n_layers = n_layers
         self.hidden_size = hidden_size
@@ -48,20 +49,22 @@ class EncoderRNN(nn.Module):
         self.gru = nn.GRU(embedding_size, hidden_size, num_layers=n_layers, bidirectional=bidirectional)
 
     def forward(self, input, hidden):
-        embedded = self.embedding(input).view(len(input), self.batch_size, -1)
-        output, hidden = self.gru(embedded, hidden)
+        # I don't know why this is (1, 1, -1)
+        embedded = self.embedding(input).view(1, 1, -1)
+        output = embedded
+        for i in range(self.n_layers):
+            output, hidden = self.gru(embedded, hidden)
 
         return output, hidden
 
     def init_hidden(self):
-        if self.bidirectional:
-            result = Variable(torch.zeros(2*self.n_layers, self.batch_size, self.hidden_size))
-        else:
-            result = Variable(torch.zeros(self.n_layers, self.batch_size, self.hidden_size))
+        # I don't know why this is (1, 1, 1)
+        result = Variable(torch.zeros(1, 1, self.hidden_size))
         if self.use_cuda:
             return result.cuda()
         else:
             return result
+
 
 def func():
     pass

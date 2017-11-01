@@ -36,8 +36,8 @@ import torch.optim as optim
 
 
 class AttnDecoderRNN(nn.Module):
-    def __init__(self, output_size, embedding_size, hidden_size, batch_size,
-                 max_length, n_layers=1, dropout_p=0.1, bidirectional=False):
+    def __init__(self, output_size, embedding_size, hidden_size, max_length,
+                 batch_size=None, n_layers=1, dropout_p=0.1, bidirectional=False):
         super(AttnDecoderRNN, self).__init__()
         self.output_size = output_size
         self.embedding_size = embedding_size
@@ -51,8 +51,8 @@ class AttnDecoderRNN(nn.Module):
         self.use_cuda = torch.cuda.is_available()
 
         self.embedding = nn.Embedding(self.output_size, self.embedding_size)
-        self.attn = nn.Linear(self.hidden_size * 2, self.max_length)
-        self.attn_combine = nn.Linear(self.hidden_size * 2, self.hidden_size)
+        self.attn = nn.Linear(self.hidden_size+self.embedding_size, self.max_length)
+        self.attn_combine = nn.Linear(self.hidden_size+self.embedding_size, self.hidden_size)
         self.dropout = nn.Dropout(self.dropout_p)
         self.gru = nn.GRU(self.embedding_size, self.hidden_size)
         self.out = nn.Linear(self.hidden_size, self.output_size)
@@ -76,10 +76,8 @@ class AttnDecoderRNN(nn.Module):
         return output, hidden, attn_weights
 
     def init_hidden(self):
-        if self.bidirectional:
-            result = Variable(torch.zeros(2*self.n_layers, self.batch_size, self.hidden_size))
-        else:
-            result = Variable(torch.zeros(self.n_layers, self.batch_size, self.hidden_size))
+        # Also, why
+        result = Variable(torch.zeros(1, 1, self.hidden_size))
         if self.use_cuda:
             return result.cuda()
         else:

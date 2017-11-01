@@ -63,7 +63,6 @@ class EncoderRNN(nn.Module):
         else:
             return result
 
-# for push
 def func():
     pass
 

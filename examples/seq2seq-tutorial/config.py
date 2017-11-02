@@ -28,7 +28,7 @@ if sys.version_info[0] < 3:
     reload(sys)
     sys.setdefaultencoding("utf-8")
 
-from utils import *
+from utils.utils import *
 
 PROCESSED_DATA_PATH = './data/processed_data.pkl'
 

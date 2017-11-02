@@ -38,6 +38,7 @@ import re
 import random
 import time
 import math
+import copy
 
 import matplotlib
 matplotlib.use('Agg')
@@ -395,19 +396,119 @@ def save_obj_to_json(obj, save_path):
 
 def save_obj_to_pickle(obj, save_path):
     with open(save_path, 'wb') as fw:
-        pickle.dump(obj, fw, protocol=pickle.HIGHEST_PROTOCOL)
+        # pickle.dump(obj, fw, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(obj, fw)
 
 
 def load_obj_from_json(save_path):
     '''
 
     :param save_path: the save path
-    :return:
+    :return: the json data
     '''
     with open(save_path, 'r') as fp:
         return json.load(fp)
 
 
 def load_obj_from_pickle(save_path):
+    '''
+
+    :param save_path: the save path
+    :return: the pickle data
+    '''
     with open(save_path, 'rb') as fp:
         return pickle.load(fp)
+
+
+def hyperparam_string(config):
+    """
+    Hyerparam string.
+    :param config: the config json
+    :return: the experiment name
+    """
+    exp_name = ''
+    exp_name += 'model_%s__' % (config['data']['task'])
+    exp_name += 'src_%s__' % (config['model']['src_lang'])
+    exp_name += 'trg_%s__' % (config['model']['trg_lang'])
+    exp_name += 'attention_%s__' % (config['model']['seq2seq'])
+    exp_name += 'dim_%s__' % (config['model']['dim'])
+    exp_name += 'emb_dim_%s__' % (config['model']['dim_word_src'])
+    exp_name += 'optimizer_%s__' % (config['training']['optimizer'])
+    exp_name += 'n_layers_src_%d__' % (config['model']['n_layers_src'])
+    exp_name += 'n_layers_trg_%d__' % (config['model']['n_layers_trg'])
+    exp_name += 'bidir_%s' % (config['model']['bidirectional'])
+
+    return exp_name
+
+
+def unk_filter(data, voc_size):
+    '''
+    only keep the top voc_size frequent words, replace the other as 0
+    word index is in the order of from most frequent to least
+    :param data:
+    :param voc_size:
+    :return:
+    '''
+    if voc_size == -1:
+        return copy.copy(data)
+    else:
+        # mask shows whether keeps each word (frequent) or not,
+        # only word_index<voc_size =1, else=0
+        mask = (np.less(data, voc_size)).astype(dtype='int32')
+        # low frequency word will be set to 1 (index of <unk>)
+        data = copy.copy(data * mask + (1 - mask))
+        return data
+
+
+def padding(data):
+    '''
+    Padding the sequence of the sequence.
+    :param data:
+    :return:
+    '''
+
+    # Get the shape of every sample of data
+    shapes = [np.asarray(sample).shape for sample in data]
+
+    # Get the length of every sample
+    lengths = [shape[0] for shape in shapes]
+
+    # make sure there's at least one zero at last to indicate the end of sentence <eol>
+    max_sequence_length = max(lengths) + 1
+
+    rest_shape = shapes[0][1:]
+    padded_batch = np.zeros((len(data), max_sequence_length) + rest_shape,
+                            dtype='int32')
+    for i, sample in enumerate(data):
+        padded_batch[i, :len(sample)] = sample
+
+    return padded_batch
+
+
+def split_into_multiple_and_padding(data_s_o, data_t_o):
+    data_s = []
+    data_t = []
+    for s, t in zip(data_s_o, data_t_o):
+        for p in t:
+            data_s += [s]
+            data_t += [p]
+
+    data_s = padding(data_s)
+    data_t = padding(data_t)
+    return data_s, data_t
+
+
+def cc_martix(source, target):
+    '''
+    return the copy matrix, size = [nb_sample, max_len_source, max_len_target]
+    :param source:
+    :param target:
+    :return:
+    '''
+    cc = np.zeros((source.shape[0], target.shape[1], source.shape[1]), dtype='float32')
+    for k in range(source.shape[0]): # go over each sample in source batch
+        for j in range(target.shape[1]): # go over each word in target (all target have same length after padding)
+            for i in range(source.shape[1]): # go over each word in source
+                if (source[k, i] == target[k, j]) and (source[k, i] > 0): # if word match, set cc[k][j][i] = 1. Don't count non-word(source[k, i]=0)
+                    cc[k][j][i] = 1.
+    return cc

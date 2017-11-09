@@ -36,7 +36,8 @@ import torch.optim as optim
 
 
 class EncoderRNN(nn.Module):
-    def __init__(self, input_size, embedding_size, hidden_size, batch_size=1, n_layers=1, bidirectional=False):
+    def __init__(self, input_size, embedding_size, hidden_size,
+                 batch_size=1, n_layers=1, bidirectional=False):
         super(EncoderRNN, self).__init__()
         self.n_layers = n_layers
         self.hidden_size = hidden_size

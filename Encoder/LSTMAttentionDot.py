@@ -33,7 +33,6 @@ if sys.version_info[0] < 3:
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 from SoftDotAttention import SoftDotAttention
 
 class LSTMAttentionDot(nn.Module):
@@ -57,8 +56,7 @@ class LSTMAttentionDot(nn.Module):
         def recurrence(input, hidden):
             """Recurrence helper."""
             hx, cx = hidden  # n_b x hidden_dim
-            gates = self.input_weights(input) + \
-                self.hidden_weights(hx)
+            gates = self.input_weights(input) + self.hidden_weights(hx)
             ingate, forgetgate, cellgate, outgate = gates.chunk(4, 1)
 
             ingate = F.sigmoid(ingate)

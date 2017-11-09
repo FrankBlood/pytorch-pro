@@ -39,11 +39,12 @@ import math
 
 class LSTMAttention(nn.Module):
 
-    def __init__(self, input_size, hidden_size, context_size):
+    def __init__(self, input_size, embedding_size, hidden_size, context_size):
         """Initialize params."""
         super(LSTMAttention, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
+        self.embedding_size = embedding_size
         self.context_size = context_size
         self.num_layers = 1
 
@@ -99,6 +100,7 @@ class LSTMAttention(nn.Module):
 
             gates = F.linear(input, self.input_weights_1, self.input_bias_1) + \
                     F.linear(hx, self.hidden_weights_1, self.hidden_bias_1)
+
             ingate, forgetgate, cellgate, outgate = gates.chunk(4, 1)
 
             ingate = F.sigmoid(ingate)

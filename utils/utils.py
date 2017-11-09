@@ -396,8 +396,8 @@ def save_obj_to_json(obj, save_path):
 
 def save_obj_to_pickle(obj, save_path):
     with open(save_path, 'wb') as fw:
-        # pickle.dump(obj, fw, protocol=pickle.HIGHEST_PROTOCOL)
-        pickle.dump(obj, fw)
+        pickle.dump(obj, fw, protocol=pickle.HIGHEST_PROTOCOL)
+        # pickle.dump(obj, fw)
 
 
 def load_obj_from_json(save_path):

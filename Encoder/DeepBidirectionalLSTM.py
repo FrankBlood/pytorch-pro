@@ -32,18 +32,17 @@ if sys.version_info[0] < 3:
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.autograd import Variable
-import numpy as np
 
 class DeepBidirectionalLSTM(nn.Module):
-    def __init__(self, input_size, hidden_size,
+    def __init__(self, input_size, embedding_size, hidden_size,
                  num_layers, dropout, batch_first):
 
         """Initialize params."""
         super(DeepBidirectionalLSTM, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
+        self.embedding_size = embedding_size
         self.dropout = dropout
         self.batch_first = batch_first
         self.num_layers = num_layers
@@ -68,6 +67,16 @@ class DeepBidirectionalLSTM(nn.Module):
             dropout=self.dropout
         )
 
+    def forward(self, input):
+        """
+        Propogate input forward through the network.
+        :param input:
+        :return:
+        """
+        hidden_bi, hidden_deep = self.init_hidden(input)
+        bilstm_output, (_, _) = self.bi_encoder(input, hidden_bi)
+        return self.encoder(bilstm_output, hidden_deep)
+
     def init_hidden(self, input):
         '''
         Get cell states and hidden states.
@@ -86,18 +95,6 @@ class DeepBidirectionalLSTM(nn.Module):
             return (h0_encoder_bi.cuda(), c0_encoder_bi.cuda()), (h0_encoder.cuda(), c0_encoder.cuda())
         else:
             return (h0_encoder_bi, c0_encoder_bi), (h0_encoder, c0_encoder)
-
-
-    def forward(self, input):
-        """
-        Propogate input forward through the network.
-        :param input:
-        :return:
-        """
-        hidden_bi, hidden_deep = self.init_hidden(input)
-        bilstm_output, (_, _) = self.bi_encoder(input, hidden_bi)
-        return self.encoder(bilstm_output, hidden_deep)
-
 
 def func():
     pass

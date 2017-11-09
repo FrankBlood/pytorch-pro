@@ -49,7 +49,7 @@ def process_data(data, vob_size):
     return data_source, data_target
 
 
-def prepare_train_val_data(metadata_path, vob_size, train_val_path, test_path):
+def prepare_train_val_data(metadata_path, vob_size, train_path, val_path, test_path, word_stat_path):
 
     train_set, validation_set, test_set, idx_to_word, word_to_idx = load_obj_from_pickle(metadata_path)
     print('sample of train_set source', train_set['source'][0])
@@ -70,18 +70,28 @@ def prepare_train_val_data(metadata_path, vob_size, train_val_path, test_path):
     print("process sucessfully.")
     new_validation_set['source'], new_validation_set['target'] = process_data(validation_set, vob_size)
     print("process successfully.")
-    save_obj_to_pickle((new_train_set, new_validation_set, idx_to_word, word_to_idx), train_val_path)
-    save_obj_to_pickle((test_set, idx_to_word, word_to_idx), test_path)
+    save_obj_to_pickle(test_set, test_path)
+    print("save test data successfully.")
+    save_obj_to_pickle((idx_to_word, word_to_idx), word_stat_path)
+    print("save word stat successfully.")
+    save_obj_to_pickle(new_validation_set, val_path)
+    print("save val data successfully.")
+    save_obj_to_pickle(new_train_set, train_path)
+    print("save train data successfully.")
 
 
 def run_prepare_train_val_data():
+    # do nothing is very OK.
     metadata_path = './data/all_600k_dataset.pkl'
     vob_size = 50000
-    train_val_path = './data/train_val_dataset_processed.pkl'
+    train_path = './data/train_dataset_processed.pkl'
+    val_path = './data/val_dataset_processed.pkl'
     test_path = './data/test_dataset_no_processed.pkl'
-    prepare_train_val_data(metadata_path, vob_size, train_val_path, test_path)
+    word_stat_path = './data/word_stat.pkl'
+    prepare_train_val_data(metadata_path, vob_size, train_path, val_path, test_path, word_stat_path)
 
 
 if __name__ == '__main__':
-    run_prepare_train_val_data()
+    pass
+    # run_prepare_train_val_data()
 
